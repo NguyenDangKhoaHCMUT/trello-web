@@ -25,9 +25,9 @@ module.exports = {
 
     //MUI
     'no-restricted-imports': [
-      "error",
+      'error',
       {
-        "patterns": ["@mui/*/*/*"]
+        'patterns': ['@mui/*/*/*']
       }
     ],
 
