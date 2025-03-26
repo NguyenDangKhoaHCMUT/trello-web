@@ -1,5 +1,5 @@
 import { experimental_extendTheme as extendTheme } from '@mui/material/styles'
-import { deepOrange, orange, teal, cyan } from '@mui/material/colors'
+import { deepOrange, orange, teal, cyan, red } from '@mui/material/colors'
 
 // Create a theme instance.
 const theme = extendTheme({
@@ -7,6 +7,7 @@ const theme = extendTheme({
     appBarHeight: 58,
     boardBarHeight: 60
   },
+  // Extend the theme with some custom colors
   colorSchemes: {
     light: {
       palette: {
@@ -18,6 +19,44 @@ const theme = extendTheme({
       palette: {
         primary: cyan,
         secondary: orange
+      }
+    }
+  },
+  components: {
+    // Name of the component
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none' //huy in hoa
+        }
+      }
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          color: theme.palette.primary.main,
+          fontSize: '0.875rem',
+          // Khi input không focus thì border sẽ có màu ...
+          '.MuiOutlinedInput-notchedOutline': {
+            borderColor: theme.palette.primary.light
+          },
+          // Khi hover vào input thì border sẽ chuyển sang màu ...
+          '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: theme.palette.primary.main
+          },
+          '& fieldset': { //huy in dam border khi focus
+            borderWidth: '1px !important'
+          }
+        })
+      }
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        // Name of the slot
+        root: ({ theme }) => ({
+          color: theme.palette.primary.main,
+          fontSize: '0.875rem'
+        })
       }
     }
   }
