@@ -1,7 +1,8 @@
 import { experimental_extendTheme as extendTheme } from '@mui/material/styles'
-import { deepOrange, orange, teal, cyan, red } from '@mui/material/colors'
+import { deepOrange, orange, teal, cyan } from '@mui/material/colors'
 
 // Create a theme instance.
+// Dung extendTheme thay cho createTheme de tranh truong hop bi loi nhap nhay (bug flickering)
 const theme = extendTheme({
   trello:{
     appBarHeight: 58,
@@ -23,6 +24,24 @@ const theme = extendTheme({
     }
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          '*::-webkit-scrollbar': {
+            with: 8,
+            height: 8
+          },
+          '*::-webkit-scrollbar-thumb': {
+            backgroundColor: '#bdc3c7',
+            borderRadius: 8
+          },
+          '*::-webkit-scrollbar-thumb:hover': {
+            backgroundColor: '#00b894',
+            borderRadius: 8
+          }
+        }
+      }
+    },
     // Name of the component
     MuiButton: {
       styleOverrides: {
