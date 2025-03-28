@@ -22,7 +22,6 @@ function index() {
         justifyContent: 'center', // center the content horizontally
         marginBottom: '1rem'
       }}>
-        Content here
       </Box>
 
       <Box sx={{
