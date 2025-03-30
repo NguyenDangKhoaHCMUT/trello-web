@@ -1,10 +1,17 @@
 import { experimental_extendTheme as extendTheme } from '@mui/material/styles'
+
+// Fixed values
+const APP_BAR_HEIGHT = 58
+const BOARD_BAR_HEIGHT = 60
+const BOARD_CONTENT_HEIGHT = `calc(100vh - ${APP_BAR_HEIGHT + BOARD_BAR_HEIGHT}px)`
+
 // Create a theme instance.
 // Dung extendTheme thay cho createTheme de tranh truong hop bi loi nhap nhay (bug flickering)
 const theme = extendTheme({
   trello:{
-    appBarHeight: 58,
-    boardBarHeight: 60
+    appBarHeight: APP_BAR_HEIGHT,
+    boardBarHeight: BOARD_BAR_HEIGHT,
+    boardContentHeight: BOARD_CONTENT_HEIGHT
   },
   // Extend the theme with some custom colors
   colorSchemes: {
@@ -26,16 +33,15 @@ const theme = extendTheme({
       styleOverrides: {
         body: {
           '*::-webkit-scrollbar': {
-            with: 8,
-            height: 8
+            width: '8px',
+            height: '8px'
           },
           '*::-webkit-scrollbar-thumb': {
             backgroundColor: '#dcdde1',
-            borderRadius: 8
+            borderRadius: '8px'
           },
           '*::-webkit-scrollbar-thumb:hover': {
-            backgroundColor: 'white',
-            borderRadius: 8
+            backgroundColor: 'white'
           }
         }
       }
@@ -58,6 +64,17 @@ const theme = extendTheme({
           // color: theme.palette.primary.main,
           // Khi input không focus thì label sẽ có màu ...
           fontSize: '0.875rem'
+        })
+      }
+    },
+    MuiTypography: {
+      styleOverrides: {
+        root: () => ({
+          // color: theme.palette.primary.main,
+          // Khi input không focus thì label sẽ có màu ...
+          '&.MuiTypography-body1': {
+            fontSize: '0.875rem'
+          }
         })
       }
     },
