@@ -21,8 +21,9 @@ import DragHandleIcon from '@mui/icons-material/DragHandle'
 
 import ListCards from './ListCards/ListCards'
 import theme from '~/theme'
+import { mapOrder } from '~/utils/sorts'
 
-function Column() {
+function Column({ column }) {
   const [anchorEl, setAnchorEl] = useState(null)
   const open = Boolean(anchorEl)
   const handleClick = (event) => {
@@ -31,6 +32,9 @@ function Column() {
   const handleClose = () => {
     setAnchorEl(null)
   }
+
+  // Sắp xếp lại thứ tự của các card trong column theo thứ tự đã được lưu trong DB
+  const orderedCards = mapOrder(column?.cards, column?.cardOrderIds, '_id')
   return (
     <Box sx={{
       minWidth: 300,
@@ -57,7 +61,7 @@ function Column() {
           }}
         >
           {/* Nhấp vào thẻ column title sẽ đổi tên thẻ */}
-          Colunm Title
+          {column.title}
         </Typography>
         <Box>
           <Tooltip title="More options">
@@ -123,7 +127,7 @@ function Column() {
         </Box>
       </Box>
       {/* Box List Card */}
-      <ListCards/>
+      <ListCards cards={orderedCards}/>
       {/* Footer column */}
       <Box sx={{
         height: theme.trello.columnFooterHeight,
