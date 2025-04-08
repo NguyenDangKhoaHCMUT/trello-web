@@ -9,13 +9,40 @@ import CardActions from '@mui/material/CardActions'
 import CardContent from '@mui/material/CardContent'
 import CardMedia from '@mui/material/CardMedia'
 
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+
 function Card({ card }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: card._id, data: {
+    ...card
+  } }) // id = column._id
+  const dndKitCardStyles = {
+    // touchAction: 'none', //Dành cho sensor default dạng PointerSensor
+    //Nếu sử dụng CSS.transform thì sẽ bị lỗi stretch
+    transform: CSS.Translate.toString(transform), // chuyen thanh translate
+    transition,
+    opacity: isDragging ? 0.5 : undefined, // Nếu đang kéo thì cho nó mờ đi 50%
+    border: isDragging? '1px solid #2ecc71' : undefined // Nếu đang kéo thì cho nó có border
+  }
   return (
-    <MuiCard sx={{
-      cursor: 'pointer',
-      boxShadow: '0 1px 1px rgba(0,0,0,0.2)',
-      overflow: 'unset'
-    }}>
+    <MuiCard
+      ref={setNodeRef}
+      style={dndKitCardStyles}
+      {...attributes}
+      {...listeners}
+      sx={{
+        cursor: 'pointer',
+        boxShadow: '0 1px 1px rgba(0,0,0,0.2)',
+        overflow: 'unset',
+        display: card?.FE_PlaceholderCard ? 'none' : 'block'
+      }}>
       {card?.cover &&
         <CardMedia
           sx={{ height: 140 }}
