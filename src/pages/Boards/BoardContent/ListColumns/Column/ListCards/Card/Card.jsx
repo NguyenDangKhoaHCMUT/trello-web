@@ -11,6 +11,7 @@ import CardMedia from '@mui/material/CardMedia'
 
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import theme from '~/theme'
 
 function Card({ card }) {
   const {
@@ -41,7 +42,12 @@ function Card({ card }) {
         cursor: 'pointer',
         boxShadow: '0 1px 1px rgba(0,0,0,0.2)',
         overflow: 'unset',
-        display: card?.FE_PlaceholderCard ? 'none' : 'block'
+        display: card?.FE_PlaceholderCard ? 'none' : 'block',
+        border: '1px solid transparent',
+        '&:hover': {
+          borderColor: (theme) => theme.palette.primary.main
+        }
+
       }}>
       {card?.cover &&
         <CardMedia
