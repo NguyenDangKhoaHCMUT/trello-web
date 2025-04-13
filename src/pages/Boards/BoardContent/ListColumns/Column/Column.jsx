@@ -3,6 +3,8 @@ import Box from '@mui/material/Box'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 
+import { toast } from 'react-toastify'
+
 import Divider from '@mui/material/Divider'
 import ListItemText from '@mui/material/ListItemText'
 import ListItemIcon from '@mui/material/ListItemIcon'
@@ -13,6 +15,8 @@ import ContentPaste from '@mui/icons-material/ContentPaste'
 import Cloud from '@mui/icons-material/Cloud'
 import Tooltip from '@mui/material/Tooltip'
 import Button from '@mui/material/Button'
+import TextField from '@mui/material/TextField'
+import CloseIcon from '@mui/icons-material/Close'
 
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever'
@@ -26,7 +30,7 @@ import { mapOrder } from '~/utils/sorts'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-function Column({ column }) {
+function Column({ column, createNewCard }) {
   const {
     attributes,
     listeners,
@@ -61,6 +65,40 @@ function Column({ column }) {
   const orderedCards = mapOrder(column?.cards, column?.cardOrderIds, '_id')
   // phải bọc div ở đây vì vấn đề chiều cao của column khi kéo thả
   // sẽ có bug kiểu flickering (video 32)
+
+  const [openNewCardForm, setOpenNewCardForm] = useState(false)
+  const toggleNewCardForm = () => {
+    setOpenNewCardForm(!openNewCardForm)
+  }
+  const [newCardTitle, setnewCardTitle] = useState('')
+  const addNewCard = async () => {
+    if (!newCardTitle) {
+      toast.error('Please enter Card title', {
+        position: 'bottom-right'
+      })
+      return
+    }
+    // console.log('newCardTitle: ', newCardTitle)
+    // Call API create new Card
+    // Tạo dữ liệu Column để gọi API
+    const newCardData = {
+      title: newCardTitle,
+      columnId: column._id // Gán columnId vào dữ liệu tạo mới Card
+    }
+
+    /**
+     * Gọi lên props function createNewCard nằm ở component cha cao nhất (board/_id.jsx)
+     * Lưu ý: Về sau ở học phần MERN Stack Advanced thì chúng ta sẽ đưa dữ liệu Board ra ngoài Redux Global State
+     * và lúc này chúng ta có thể gọi API luon ở đây là xong thay vì phải lần lượt gọi ngược lên những
+     * component cha phía bên trên (Đối với component con nằm càng sâu thì càng khổ)
+     * Việc sử dụng Redux như vậy thì code sẽ Clean chuẩn chỉnh hơn rất nhiều
+     */
+    await createNewCard(newCardData)
+
+    // Đóng trạng thái thêm Card mới và clear input
+    toggleNewCardForm()
+    setnewCardTitle('')
+  }
   return (
     <div
       ref={setNodeRef}
@@ -161,21 +199,97 @@ function Column({ column }) {
           </Box>
         </Box>
         {/* Box List Card */}
-        <ListCards cards={orderedCards}/>
+        <ListCards cards={orderedCards} />
         {/* Footer column */}
         <Box sx={{
           height: theme.trello.columnFooterHeight,
-          p: 2,
-          display: 'flex',
-          alignItems: 'center', // canh giua theo chieu doc
-          justifyContent: 'space-between' // theo chieu ngang
+          p: 2
         }}>
-          <Button startIcon={<AddCardIcon/>}>Add new card</Button>
-          <Tooltip title="Drag to move">
-            <DragHandleIcon sx={{
-              cursor: 'pointer'
-            }} />
-          </Tooltip>
+          {!openNewCardForm
+            ? <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Button startIcon={<AddCardIcon/>} onClick={toggleNewCardForm}>Add new card</Button>
+              <Tooltip title="Drag to move">
+                <DragHandleIcon sx={{
+                  cursor: 'pointer'
+                }} />
+              </Tooltip>
+            </Box>
+            : <Box sx={{
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
+            }}>
+              <TextField
+                label="Enter card title..."
+                type="text"
+                size='small'
+                variant='outlined'
+                autoFocus
+                data-no-dnd='true'
+                value={newCardTitle}
+                onChange={(e) => setnewCardTitle(e.target.value)}
+                sx={{
+                  // label khi khong focus thi co mau ...,
+                  '& label': {
+                    color: 'text.primary'
+                  },
+                  // khi input thi mau chu ...
+                  '& input': {
+                    color: (theme) => theme.palette.primary.main,
+                    bgcolor: (theme) => (theme.palette.mode === 'dark' ? '#333643' : 'white')
+                  },
+                  // label khi focus thi co mau ...,
+                  '& label.Mui-focused': {
+                    color: (theme) => theme.palette.primary.main
+                  },
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': { //khi focus thi border co mau ...,
+                      borderColor: (theme) => theme.palette.primary.main
+                    },
+                    '&: hover fieldset': { //khi focus thi border co mau ...,
+                      borderColor: (theme) => theme.palette.primary.main
+                    },
+                    '&.Mui-focused fieldset': { //khi focus thi border co mau ...,
+                      borderColor: (theme) => theme.palette.primary.main
+                    }
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    borderRadius: 1
+                  }
+                }}
+              />
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}>
+                <Button
+                  data-no-dnd='true'
+                  onClick={addNewCard}
+                  variant='contained'
+                  color='success'
+                  size='small'
+                  sx={{
+                    boxShadow: 'none',
+                    border: '0.5px solid',
+                    borderColor: (theme) => theme.palette.success.main,
+                    '&:hover': {
+                      bgcolor: (theme) => theme.palette.success.main
+                    }
+                  }}>Add</Button>
+                <CloseIcon
+                  fontSize='small'
+                  sx={{
+                    color: (theme) => theme.palette.warning.light,
+                    cursor: 'pointer'
+                  }}
+                  onClick={toggleNewCardForm} // Đóng trạng thái thêm Card mới và clear input
+                />
+              </Box>
+            </Box>
+          }
+          
         </Box>
       </Box>
     </div>
