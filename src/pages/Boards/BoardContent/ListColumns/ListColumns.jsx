@@ -18,7 +18,7 @@ import { toast } from 'react-toastify'
 // https://github.com/clauderic/dnd-kit/issues/183#issuecomment-812569512
 // Nếu không đúng thì vẫn kéo thả được nhưng không có hiệu ứng animation
 
-function ListColumns({ columns, createNewColumn, createNewCard }) {
+function ListColumns({ columns, createNewColumn, createNewCard, deleteColumnDetails }) {
   const [openNewColumnForm, setOpenNewColumnForm] = useState(false)
   const toggleNewColumnForm = () => {
     setOpenNewColumnForm(!openNewColumnForm)
@@ -41,7 +41,7 @@ function ListColumns({ columns, createNewColumn, createNewCard }) {
      * component cha phía bên trên (Đối với component con nằm càng sâu thì càng khổ)
      * Việc sử dụng Redux như vậy thì code sẽ Clean chuẩn chỉnh hơn rất nhiều
      */
-    await createNewColumn(newColumnData)
+    createNewColumn(newColumnData)
 
     // Đóng trạng thái thêm Column mới và clear input
     toggleNewColumnForm()
@@ -61,7 +61,12 @@ function ListColumns({ columns, createNewColumn, createNewCard }) {
         }
       }}>
         {columns?.map(column => (
-          <Column key={column._id} column={column} createNewCard={createNewCard}/>
+          <Column
+            key={column._id}
+            column={column}
+            createNewCard={createNewCard}
+            deleteColumnDetails={deleteColumnDetails}
+          />
         ))}
 
         {!openNewColumnForm

@@ -1,7 +1,6 @@
 import Box from '@mui/material/Box'
 import theme from '~/theme'
 import ListColumns from './ListColumns/ListColumns'
-import { mapOrder } from '~/utils/sorts'
 import {
   DndContext,
   useSensor,
@@ -30,7 +29,13 @@ const ACTIVE_DRAG_ITEM_TYPE = {
   CARD: 'ACTIVE_DRAG_ITEM_TYPE_CARD'
 }
 
-function BoardContent({ board, createNewColumn, createNewCard }) {
+function BoardContent({
+  board, createNewColumn,
+  createNewCard, moveColumns,
+  moveCardInTheSameColumn,
+  moveCardToDifferentColumn,
+  deleteColumnDetails
+}) {
   // https://docs.dndkit.com/api-documentation/sensors
   // const pointerSensor = useSensor(PointerSensor, {
   //   activationConstraint: {
@@ -66,8 +71,8 @@ function BoardContent({ board, createNewColumn, createNewCard }) {
   const lastOverId = useRef(null)
 
   useEffect(() => {
-    const orderedColumns = mapOrder(board?.columns, board?.columnOrderIds, '_id')
-    setOrderedColumns(orderedColumns)
+    // Columns đã được sắp xếp ở component cha cao nhất (boards/_id.jsx) rồi (video 71 đã giải thích)
+    setOrderedColumns(board.columns)
   }, [board])
 
   // Tìm column theo cardId (trong trường hợp kéo card giữa các column)
@@ -78,7 +83,7 @@ function BoardContent({ board, createNewColumn, createNewCard }) {
   }
 
 
-  // Function chung xử lý việc
+  // Khởi tạo Function chung xử lý việc
   // cập nhật lại state trong TH di chuyển card giữa 2 column khác nhau
   const moveCardBetweenDifferentColumns = (
     overColumn,
@@ -87,7 +92,8 @@ function BoardContent({ board, createNewColumn, createNewCard }) {
     over,
     activeColumn,
     activeDraggingCardId,
-    activeDraggingCardData
+    activeDraggingCardData,
+    triggerFrom
   ) => {
     setOrderedColumns(prevColumns => {
       // Tìm vị trí (index) của overCard trong column đích (nơi mà activeCard sắp đc thả)
@@ -143,6 +149,29 @@ function BoardContent({ board, createNewColumn, createNewCard }) {
 
         // cập nhật lại mảng cardOrderIds cho chuẩn dữ liệu
         nextOverColumn.cardOrderIds = nextOverColumn.cards.map(card => card._id)
+      }
+
+      // Nếu Func này được gọi từ handleDragEnd nghĩa là đã kéo thả xong,
+      // Lúc này mới xử lý gọi API 1 lần ở đây
+      if (triggerFrom === 'handleDragEnd') {
+        /**
+         * Gọi lên props function moveCardToDifferentColumn nằm ở component cha cao nhất (boards/_id.jsx)
+         * Lưu ý: Về sau ở học phần MERN Stack Advanced thì chúng ta sẽ đưa dữ liệu Board ra ngoài Redux Global State
+         * và lúc này chúng ta có thể gọi API luon ở đây là xong thay vì phải lần lượt gọi ngược lên những
+         * component cha phía bên trên (Đối với component con nằm càng sâu thì càng khổ)
+         * Việc sử dụng Redux như vậy thì code sẽ Clean chuẩn chỉnh hơn rất nhiều
+         */
+        /**
+         * Phải dùng tới activeDragItemData.columnId hoặc tốt nhất là oldColumnWhenDraggingCard._id
+         * (set vào state từ bước handleDragStart) chứ không phải activeData trong scope handleDragEnd này
+         * vì sau khi đi qua onDragOver tới đây là state của card đã bị cập nhật một lần rồi
+         */
+        moveCardToDifferentColumn(
+          activeDraggingCardId,
+          oldColumnWhenDraggingCard._id,
+          nextOverColumn._id,
+          nextColumns
+        )
       }
       return nextColumns
     })
@@ -212,7 +241,8 @@ function BoardContent({ board, createNewColumn, createNewCard }) {
         over,
         activeColumn,
         activeDraggingCardId,
-        activeDraggingCardData
+        activeDraggingCardData,
+        'handleDragOver'
       )
     }
   }
@@ -247,7 +277,7 @@ function BoardContent({ board, createNewColumn, createNewCard }) {
         return
       }
 
-      // Kéo card qua 2 column khác nhau
+      // Hành động kéo thả card giữa 2 column khác nhau
       // Phải dùng tới activeDragItemData.columnId hoặc oldColumnWhenDraggingCard._id (set vào state từ bước handleDragStart) chứ không phải activeData
       // trong scope handleDragEnd này vì sau khi đi qua onDragOver tới đây là state của card đã bị cập nhật
       // một lần rồi
@@ -259,21 +289,27 @@ function BoardContent({ board, createNewColumn, createNewCard }) {
           over,
           activeColumn,
           activeDraggingCardId,
-          activeDraggingCardData
+          activeDraggingCardData,
+          'handleDragEnd'
         )
       } else {
         // Hành động kéo thả card trong cùng 1 column
 
         // Lấy vị trí cũ (từ thằng oldColumnWhenDraggingCard)
         const oldCardIndex = oldColumnWhenDraggingCard?.cards?.findIndex(c => c._id === activeDragItemId)
+        // console.log('oldCardIndex', oldCardIndex)
         // Lấy vị trí mới (từ thằng over)
         const newCardIndex = overColumn?.cards?.findIndex(c => c._id === overCardId)
+        // console.log('newCardIndex', newCardIndex)
 
-        // Dùng arrayMove vì kéo card trong một cái column thì tương tự với login
+        // Dùng arrayMove vì kéo card trong một cái column thì tương tự với logic
         // kéo column trong một cái board content
         const dndOrderedCards = arrayMove(oldColumnWhenDraggingCard?.cards, oldCardIndex, newCardIndex)
+        const dndOrderedCardsIds = dndOrderedCards.map(card => card._id)
 
         // console.log('dndOrderedCards', dndOrderedCards)
+        // Vẫn gọi update State ở đây để tránh delay hoặc Flickering giao diện lúc kéo thả cần phải chờ gọi
+        // API (small trick)
         setOrderedColumns(prevColumns => {
           // Clone mảng OrderedColumnsState cũ ra một cái mới để xử lý data
           // rồi return - cập nhật lại OrderedColumnsState mới
@@ -284,11 +320,20 @@ function BoardContent({ board, createNewColumn, createNewCard }) {
 
           // Cập nhật lại 2 giá trị mới là card và cardOrderIds trong cái targetColumn
           targetColumn.cards = dndOrderedCards
-          targetColumn.cardOrderIds = dndOrderedCards.map(card => card._id)
+          targetColumn.cardOrderIds = dndOrderedCardsIds
 
           // Trả về giá trị state mới chuẩn vị trí
           return nextColumns
         })
+
+        /**
+         * Gọi lên props function moveCardInTheSameColumn nằm ở component cha cao nhất (boards/_id.jsx)
+         * Lưu ý: Về sau ở học phần MERN Stack Advanced thì chúng ta sẽ đưa dữ liệu Board ra ngoài Redux Global State
+         * và lúc này chúng ta có thể gọi API luon ở đây là xong thay vì phải lần lượt gọi ngược lên những
+         * component cha phía bên trên (Đối với component con nằm càng sâu thì càng khổ)
+         * Việc sử dụng Redux như vậy thì code sẽ Clean chuẩn chỉnh hơn rất nhiều
+         */
+        moveCardInTheSameColumn(dndOrderedCards, dndOrderedCardsIds, oldColumnWhenDraggingCard._id)
       }
     }
 
@@ -304,11 +349,19 @@ function BoardContent({ board, createNewColumn, createNewCard }) {
         // Dùng arrayMove của thg dnd-kit để sắp xếp lại mảng Columns ban đầu
         // Code của arrayMove ở đây: https://github.com/clauderic/dnd-kit/blob/master/packages/sortable/src/utilities/arrayMove.ts
         const dndOrderedColumns = arrayMove(orderedColumns, oldColumnIndex, newColumnIndex)
-        // 2 cái console.log bên dưới là để khi gọi API
-        // const dndOrderedColumnsIds = dndOrderedColumns.map(column => column._id)
-        // console.log('dndOrderedColumns', dndOrderedColumns)
-        // console.log('dndOrderedColumnsIds', dndOrderedColumnsIds)
+
+        // Vẫn gọi Update State ở đây để tránh delay hoặc Flickering giao diện lúc kéo thả cần phải chờ gọi
+        // API (small trick)
         setOrderedColumns(dndOrderedColumns)
+
+        /**
+         * Gọi lên props function moveColumns nằm ở component cha cao nhất (boards/_id.jsx)
+         * Lưu ý: Về sau ở học phần MERN Stack Advanced thì chúng ta sẽ đưa dữ liệu Board ra ngoài Redux Global State
+         * và lúc này chúng ta có thể gọi API luon ở đây là xong thay vì phải lần lượt gọi ngược lên những
+         * component cha phía bên trên (Đối với component con nằm càng sâu thì càng khổ)
+         * Việc sử dụng Redux như vậy thì code sẽ Clean chuẩn chỉnh hơn rất nhiều
+         */
+        moveColumns(dndOrderedColumns)
       }
     }
 
@@ -406,7 +459,7 @@ function BoardContent({ board, createNewColumn, createNewCard }) {
         height: theme.trello.boardContentHeight,
         p: '10px 0'
       }}>
-        <ListColumns columns={orderedColumns} createNewColumn={createNewColumn} createNewCard={createNewCard}/>
+        <ListColumns columns={orderedColumns} createNewColumn={createNewColumn} createNewCard={createNewCard} deleteColumnDetails={deleteColumnDetails}/>
         <DragOverlay dropAnimation={customDropAnimation}>
           {(!activeDragItemType) && null}
           {(activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.COLUMM) && <Column column={activeDragItemData}/>}

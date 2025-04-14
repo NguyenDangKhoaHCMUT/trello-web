@@ -25,12 +25,13 @@ import DragHandleIcon from '@mui/icons-material/DragHandle'
 
 import ListCards from './ListCards/ListCards'
 import theme from '~/theme'
-import { mapOrder } from '~/utils/sorts'
 
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-function Column({ column, createNewCard }) {
+import { useConfirm } from 'material-ui-confirm'
+
+function Column({ column, createNewCard, deleteColumnDetails }) {
   const {
     attributes,
     listeners,
@@ -61,8 +62,8 @@ function Column({ column, createNewCard }) {
     setAnchorEl(null)
   }
 
-  // Sắp xếp lại thứ tự của các card trong column theo thứ tự đã được lưu trong DB
-  const orderedCards = mapOrder(column?.cards, column?.cardOrderIds, '_id')
+  // Cards đã được sắp xếp ở trong component cha (board/_id.jsx) rồi (video 71 đã giải thích phần fix bug quan trọng)
+  const orderedCards = column.cards
   // phải bọc div ở đây vì vấn đề chiều cao của column khi kéo thả
   // sẽ có bug kiểu flickering (video 32)
 
@@ -93,11 +94,35 @@ function Column({ column, createNewCard }) {
      * component cha phía bên trên (Đối với component con nằm càng sâu thì càng khổ)
      * Việc sử dụng Redux như vậy thì code sẽ Clean chuẩn chỉnh hơn rất nhiều
      */
-    await createNewCard(newCardData)
+    createNewCard(newCardData)
 
     // Đóng trạng thái thêm Card mới và clear input
     toggleNewCardForm()
     setnewCardTitle('')
+  }
+
+  // Xử lý xóa một Column và Cards bên trong nó
+  const confirmDeleteColumn = useConfirm()
+  const handelDeleteColumn = () => {
+    confirmDeleteColumn({
+      title: 'Want to delete this column?',
+      description: 'This action will delete all cards in this column',
+      confirmationText: 'Confirm',
+      cancellationText: 'Cancel'
+    })
+      .then(() => {
+        /**
+         * Gọi lên props function deleteColumnDetails nằm ở component cha cao nhất (board/_id.jsx)
+         * Lưu ý: Về sau ở học phần MERN Stack Advanced thì chúng ta sẽ đưa dữ liệu Board ra ngoài Redux Global State
+         * và lúc này chúng ta có thể gọi API luon ở đây là xong thay vì phải lần lượt gọi ngược lên những
+         * component cha phía bên trên (Đối với component con nằm càng sâu thì càng khổ)
+         * Việc sử dụng Redux như vậy thì code sẽ Clean chuẩn chỉnh hơn rất nhiều
+         */
+        deleteColumnDetails(column._id)
+      })
+      .catch(() => {
+        // console.log('Cancel delete column')
+      })
   }
   return (
     <div
@@ -154,13 +179,23 @@ function Column({ column, createNewCard }) {
               anchorEl={anchorEl}
               open={open}
               onClose={handleClose}
+              onClick={handleClose}
               MenuListProps={{
                 'aria-labelledby': 'basic-button-dropdown"'
               }}
             >
-              <MenuItem>
+              <MenuItem sx={{
+                '&:hover': {
+                  color: 'success.light',
+                  '& .add-card-icon': {
+                    color: 'success.light'
+                  }
+                }
+              }}
+              onClick={toggleNewCardForm} // Mở trạng thái thêm Card mới
+              >
                 <ListItemIcon>
-                  <AddCardIcon fontSize="small" />
+                  <AddCardIcon fontSize="small" className='add-card-icon'/>
                 </ListItemIcon>
                 <ListItemText>Add new card</ListItemText>
               </MenuItem>
@@ -183,11 +218,21 @@ function Column({ column, createNewCard }) {
                 <ListItemText>Paste</ListItemText>
               </MenuItem>
               <Divider />
-              <MenuItem>
+              <MenuItem
+                onClick={handelDeleteColumn}
+                sx={{
+                  '&:hover': {
+                    color: 'warning.dark',
+                    '& .delete-forever-icon': {
+                      color: 'warning.dark'
+                    }
+                  }
+                }}
+              >
                 <ListItemIcon>
-                  <DeleteForeverIcon fontSize="small" />
+                  <DeleteForeverIcon className='delete-forever-icon' fontSize="small" />
                 </ListItemIcon>
-                <ListItemText>Remove this column</ListItemText>
+                <ListItemText>Delete this column</ListItemText>
               </MenuItem>
               <MenuItem>
                 <ListItemIcon>
@@ -289,7 +334,6 @@ function Column({ column, createNewCard }) {
               </Box>
             </Box>
           }
-          
         </Box>
       </Box>
     </div>
