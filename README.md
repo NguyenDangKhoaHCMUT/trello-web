@@ -6,8 +6,8 @@ A full-stack web application clone of Trello built using the MERN (MongoDB, Expr
 ## Installation
 1. Clone the repository
    ```bash
-   git clone https://github.com/your-username/trello-clone.git
-   cd trello-clone
+   git clone https://github.com/NguyenDangKhoaHCMUT/trello-web.git
+   cd trello-web
    ```
 
 2. Environment Setup
@@ -26,38 +26,9 @@ A full-stack web application clone of Trello built using the MERN (MongoDB, Expr
 
 3. Install Dependencies
    ```bash
-   # Install frontend dependencies
    cd trello-web
    yarn install
-
-   # Install backend dependencies
-   cd ../trello-api
-   yarn install
    ```
-
-4. Configure Environment Variables
-   - Create `.env` file in both frontend and backend directories
-   - Copy the contents from `.env.example` files
-   - Update the values according to your setup
-
-5. Start the Application
-   ```bash
-   # Start backend server
-   cd trello-api
-   yarn dev
-
-   # Start frontend development server (in a new terminal)
-   cd trello-web
-   yarn dev
-   ```
-
-6. Access the Application
-   - Frontend: http://localhost:5173
-   - Backend API: http://localhost:8017
-
-### Common Issues
-- If you encounter EACCES permission errors during installation, avoid using sudo. Instead, fix npm permissions.
-- For port conflicts, modify the port numbers in the respective configuration files.
 
 ## Technologies Used
 ### Frontend
