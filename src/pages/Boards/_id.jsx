@@ -204,7 +204,6 @@ function Board() {
         justifyContent: 'center',
         alignItems: 'center',
         gap: 2,
-        width: '100vh',
         height: '100vh'
       }}>
         <CircularProgress />
