@@ -21,7 +21,7 @@ import { isEmpty } from 'lodash'
 
 import { mapOrder } from '~/utils/sorts'
 
-import CircularProgress from '@mui/material/CircularProgress'
+import Reload from '~/customReloadPage/reload'
 import Box from '@mui/material/Box'
 
 import { toast } from 'react-toastify'
@@ -206,7 +206,7 @@ function Board() {
         gap: 2,
         height: '100vh'
       }}>
-        <CircularProgress />
+        <Reload />
       </Box>
     )
   }
