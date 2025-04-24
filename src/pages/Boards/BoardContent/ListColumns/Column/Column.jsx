@@ -31,7 +31,29 @@ import { CSS } from '@dnd-kit/utilities'
 
 import { useConfirm } from 'material-ui-confirm'
 
-function Column({ column, createNewCard, deleteColumnDetails }) {
+import {
+  updateCurrentActiveBoard,
+  selectCurrentActiveBoard
+} from '~/redux/activeBoard/activeBoardSlice'
+
+import { useDispatch, useSelector } from 'react-redux'
+import { cloneDeep } from 'lodash'
+
+import {
+  createNewCardAPI,
+  deleteColumnDetailsAPI
+} from '~/apis'
+
+function Column({
+  column
+  // createNewCard,
+  // deleteColumnDetails
+}) {
+  const dispatch = useDispatch()
+  // Không dùng State của component nữa mà chuyển qua dùng State của Redux
+  // const [board, setBoard] = useState(null)
+  const board = useSelector(selectCurrentActiveBoard) // Lấy dữ liệu board từ redux store
+
   const {
     attributes,
     listeners,
@@ -87,14 +109,37 @@ function Column({ column, createNewCard, deleteColumnDetails }) {
       columnId: column._id // Gán columnId vào dữ liệu tạo mới Card
     }
 
+    // Gọi API tạo mới Card và làm lại dữ liệu State board
+    const createdCard = await createNewCardAPI({
+      ...newCardData,
+      boardId: board._id // Gán boardId vào dữ liệu tạo mới Column
+    })
+
+    // Cập nhật lại state board
     /**
-     * Gọi lên props function createNewCard nằm ở component cha cao nhất (board/_id.jsx)
-     * Lưu ý: Về sau ở học phần MERN Stack Advanced thì chúng ta sẽ đưa dữ liệu Board ra ngoài Redux Global State
-     * và lúc này chúng ta có thể gọi API luon ở đây là xong thay vì phải lần lượt gọi ngược lên những
-     * component cha phía bên trên (Đối với component con nằm càng sâu thì càng khổ)
-     * Việc sử dụng Redux như vậy thì code sẽ Clean chuẩn chỉnh hơn rất nhiều
+     * Phía FE chúng ta phải tự làm đúng lại state data board (thay vì phải gọi lạ API fetchBoardDetailsAPI)
+     * để lấy lại dữ liệu board mới nhất
+     * Lưu ý: cách làm này phụ thuộc vào tùy lựa chọn đặc thù của dự án, có nơi thì BE sẽ hỗ trợ trả về luôn toàn bộ Board
+     * dù đây có là api tạo Column hay Card đi chăng nữa => lúc này FE sẽ nhàn hơn
      */
-    createNewCard(newCardData)
+    // const newBoard = { ...board }
+
+    // Tương tự như hàm createNewColumn, chỗ này dùng CloneDeep để deep copy toàn bộ Board
+    const newBoard = cloneDeep(board)
+    const columnToUpdate = newBoard.columns.find(c => c._id === newCardData.columnId) // Tìm Column cần cập nhật
+    if (columnToUpdate) {
+      // Nếu column rỗng: bản chất là đang chứa placeholderCard, cần xóa nó đi trc khi thêm card mới vào
+      if (columnToUpdate.cards.some(card => card.FE_PlaceholderCard)) {
+        columnToUpdate.cards = [createdCard]
+        columnToUpdate.cardOrderIds = [createdCard._id] // Thay thế cardOrderIds mới cho Column
+      } else {
+        // Ngược lại, Column đã có data thì push vào cuối mảng
+        columnToUpdate.cards.push(createdCard) // Thêm Card mới vào Column
+        columnToUpdate.cardOrderIds.push(createdCard._id) // Thêm CardId mới vào cuối CardOrderIds
+      }
+    }
+    // setBoard(newBoard) // Cập nhật lại state board
+    dispatch(updateCurrentActiveBoard(newBoard)) // Cập nhật lại dữ liệu board trong redux store
 
     // Đóng trạng thái thêm Card mới và clear input
     toggleNewCardForm()
@@ -110,15 +155,25 @@ function Column({ column, createNewCard, deleteColumnDetails }) {
       confirmationText: 'Confirm',
       cancellationText: 'Cancel'
     })
+      // Xử lý xóa một Column và Cards bên trong nó
       .then(() => {
-        /**
-         * Gọi lên props function deleteColumnDetails nằm ở component cha cao nhất (board/_id.jsx)
-         * Lưu ý: Về sau ở học phần MERN Stack Advanced thì chúng ta sẽ đưa dữ liệu Board ra ngoài Redux Global State
-         * và lúc này chúng ta có thể gọi API luon ở đây là xong thay vì phải lần lượt gọi ngược lên những
-         * component cha phía bên trên (Đối với component con nằm càng sâu thì càng khổ)
-         * Việc sử dụng Redux như vậy thì code sẽ Clean chuẩn chỉnh hơn rất nhiều
-         */
-        deleteColumnDetails(column._id)
+        // Cập nhật lại cho chuẩn dữ liệu state board
+
+        // Tương tự như hàm moveColumns, chỗ này không ảnh hưởng Rule Immutability của redux toolkit
+        const newBoard = { ...board }
+        // Filter trong JS cũng tạo ra mảng mới như concat
+        newBoard.columns = newBoard.columns.filter(c => c._id !== column._id) // Xóa Column trong Board
+        newBoard.columnOrderIds = newBoard.columnOrderIds.filter(id => id !== column._id) // Xóa ColumnId trong Board
+        // console.log(newBoard)
+        // setBoard(newBoard) // Cập nhật lại state board
+        dispatch(updateCurrentActiveBoard(newBoard)) // Cập nhật lại dữ liệu board trong redux store
+
+        // Gọi API xử lý phía BE
+        deleteColumnDetailsAPI(column._id)
+          .then(res => {
+            // console.log("🚀 ~ deleteColumnDetails ~ res:", res)
+            toast.success(res?.deleteResult)
+          })
       })
       .catch(() => {
         // console.log('Cancel delete column')
