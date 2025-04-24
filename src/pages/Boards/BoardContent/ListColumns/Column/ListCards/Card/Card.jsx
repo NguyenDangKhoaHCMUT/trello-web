@@ -11,7 +11,7 @@ import CardMedia from '@mui/material/CardMedia'
 
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import theme from '~/theme'
+// import theme from '~/theme'
 
 function Card({ card }) {
   const {

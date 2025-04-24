@@ -30,11 +30,13 @@ const ACTIVE_DRAG_ITEM_TYPE = {
 }
 
 function BoardContent({
-  board, createNewColumn,
-  createNewCard, moveColumns,
+  board,
+  // createNewColumn,
+  // createNewCard,
+  moveColumns,
   moveCardInTheSameColumn,
-  moveCardToDifferentColumn,
-  deleteColumnDetails
+  moveCardToDifferentColumn
+  // deleteColumnDetails
 }) {
   // https://docs.dndkit.com/api-documentation/sensors
   // const pointerSensor = useSensor(PointerSensor, {
@@ -459,7 +461,12 @@ function BoardContent({
         height: theme.trello.boardContentHeight,
         p: '10px 0'
       }}>
-        <ListColumns columns={orderedColumns} createNewColumn={createNewColumn} createNewCard={createNewCard} deleteColumnDetails={deleteColumnDetails}/>
+        <ListColumns
+          columns={orderedColumns}
+          // createNewColumn={createNewColumn}
+          // createNewCard={createNewCard}
+          // deleteColumnDetails={deleteColumnDetails}
+        />
         <DragOverlay dropAnimation={customDropAnimation}>
           {(!activeDragItemType) && null}
           {(activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.COLUMM) && <Column column={activeDragItemData}/>}
