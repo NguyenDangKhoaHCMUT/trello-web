@@ -25,18 +25,21 @@ import {
 
 import { useDispatch, useSelector } from 'react-redux'
 
+import { useParams } from 'react-router-dom'
+
 function Board() {
   const dispatch = useDispatch()
   // Không dùng State của component nữa mà chuyển qua dùng State của Redux
   // const [board, setBoard] = useState(null)
   const board = useSelector(selectCurrentActiveBoard) // Lấy dữ liệu board từ redux store
+
+  const { boardId } = useParams()
+
+
   useEffect(() => {
-    // Tạm thời fix cứng boardId, flow chuẩn chỉnh về sau khi học nâng cao là chúng ta
-    // sẽ sử dụng react-router-dom để lấy boardId từ URL
-    const boardId = '67fa8ea8c613601fec509f3a'
     // Call API
     dispatch(fetchBoardDetailsAPI(boardId))
-  }, [dispatch])
+  }, [dispatch, boardId])
 
 
   // Function này có nhiệm vụ gọi API cập nhật lại thứ tự các Column khi kéo thả Column xong xuôi
