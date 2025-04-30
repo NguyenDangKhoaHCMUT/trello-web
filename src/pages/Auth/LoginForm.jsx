@@ -43,14 +43,15 @@ function LoginForm() {
     toast.promise(
       dispatch(loginUserAPI({ email, password })),
       {
-        pending: 'Logging in...',
-        success: 'Login successfully!'
+        pending: 'Logging in...'
       }
     ).then(res => {
       // console.log('🚀 ~ submitLogIn ~ res:', res)
       // Đoạn này kiểm tra xem có lỗi hay không thì mới redirect về route /
-      if (email === TESTING_ACCOUNT_EMAIL) toast.warning('This is just a testing account!')
-      if (!res.error) navigate('/')
+      if (!res.error) {
+        if (email === TESTING_ACCOUNT_EMAIL) toast.warning('This is just a testing account!')
+        navigate('/')
+      }
     })
   }
 
