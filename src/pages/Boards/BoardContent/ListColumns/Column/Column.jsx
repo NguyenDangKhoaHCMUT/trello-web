@@ -9,10 +9,10 @@ import Divider from '@mui/material/Divider'
 import ListItemText from '@mui/material/ListItemText'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import Typography from '@mui/material/Typography'
-import ContentCut from '@mui/icons-material/ContentCut'
-import ContentCopy from '@mui/icons-material/ContentCopy'
-import ContentPaste from '@mui/icons-material/ContentPaste'
-import Cloud from '@mui/icons-material/Cloud'
+// import ContentCut from '@mui/icons-material/ContentCut'
+// import ContentCopy from '@mui/icons-material/ContentCopy'
+// import ContentPaste from '@mui/icons-material/ContentPaste'
+// import Cloud from '@mui/icons-material/Cloud'
 import Tooltip from '@mui/material/Tooltip'
 import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
@@ -39,6 +39,9 @@ import {
 import { useDispatch, useSelector } from 'react-redux'
 import { cloneDeep } from 'lodash'
 
+import { selectCurrentUser } from '~/redux/user/userSlice'
+import { TESTING_ACCOUNT_EMAIL } from '~/utils/constants'
+
 import {
   createNewCardAPI,
   deleteColumnDetailsAPI
@@ -50,6 +53,7 @@ function Column({
   // deleteColumnDetails
 }) {
   const dispatch = useDispatch()
+  const currentUser = useSelector(selectCurrentUser)
   // Không dùng State của component nữa mà chuyển qua dùng State của Redux
   // const [board, setBoard] = useState(null)
   const board = useSelector(selectCurrentActiveBoard) // Lấy dữ liệu board từ redux store
@@ -101,6 +105,11 @@ function Column({
       })
       return
     }
+
+    if (currentUser.email === TESTING_ACCOUNT_EMAIL) {
+      toast.warning('This is just a testing account! You do not have permisson to create new card!')
+      return
+    }
     // console.log('newCardTitle: ', newCardTitle)
     // Call API create new Card
     // Tạo dữ liệu Column để gọi API
@@ -149,6 +158,10 @@ function Column({
   // Xử lý xóa một Column và Cards bên trong nó
   const confirmDeleteColumn = useConfirm()
   const handelDeleteColumn = () => {
+    if (currentUser.email === TESTING_ACCOUNT_EMAIL) {
+      toast.warning('This is just a testing account! You do not have permisson to delete column(s)!')
+      return
+    }
     confirmDeleteColumn({
       title: 'Want to delete this column?',
       description: 'This action will delete all cards in this column',
@@ -254,7 +267,7 @@ function Column({
                 </ListItemIcon>
                 <ListItemText>Add new card</ListItemText>
               </MenuItem>
-              <MenuItem>
+              {/* <MenuItem>
                 <ListItemIcon>
                   <ContentCut fontSize="small" />
                 </ListItemIcon>
@@ -271,7 +284,7 @@ function Column({
                   <ContentPaste fontSize="small" />
                 </ListItemIcon>
                 <ListItemText>Paste</ListItemText>
-              </MenuItem>
+              </MenuItem> */}
               <Divider />
               <MenuItem
                 onClick={handelDeleteColumn}
@@ -289,12 +302,12 @@ function Column({
                 </ListItemIcon>
                 <ListItemText>Delete this column</ListItemText>
               </MenuItem>
-              <MenuItem>
+              {/* <MenuItem>
                 <ListItemIcon>
                   <Cloud fontSize="small" />
                 </ListItemIcon>
                 <ListItemText>Archive this column</ListItemText>
-              </MenuItem>
+              </MenuItem> */}
             </Menu>
           </Box>
         </Box>
@@ -329,6 +342,13 @@ function Column({
                 data-no-dnd='true'
                 value={newCardTitle}
                 onChange={(e) => setnewCardTitle(e.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    addNewCard()
+                  } else if (event.key === 'Escape') {
+                    toggleNewCardForm()
+                  }
+                }}
                 sx={{
                   // label khi khong focus thi co mau ...,
                   '& label': {
@@ -365,6 +385,7 @@ function Column({
                 gap: 1
               }}>
                 <Button
+                  className='interceptor-loading'
                   data-no-dnd='true'
                   onClick={addNewCard}
                   variant='contained'

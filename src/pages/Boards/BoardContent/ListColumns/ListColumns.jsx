@@ -23,6 +23,9 @@ import {
 } from '~/redux/activeBoard/activeBoardSlice'
 import { useDispatch, useSelector } from 'react-redux'
 
+import { selectCurrentUser } from '~/redux/user/userSlice'
+import { TESTING_ACCOUNT_EMAIL } from '~/utils/constants'
+
 // The <SortableContext> component requires that you pass it the sorted array of
 // the unique identifiers associated to each sortable item via the items prop.
 // This array should look like ["1", "2", "3"], not [{id: "1"}, {id: "2}, {id: "3}].
@@ -38,6 +41,7 @@ function ListColumns({
 }) {
   const board = useSelector(selectCurrentActiveBoard) // Lấy dữ liệu board từ redux store
   const dispatch = useDispatch()
+  const currentUser = useSelector(selectCurrentUser)
   const [openNewColumnForm, setOpenNewColumnForm] = useState(false)
   const toggleNewColumnForm = () => {
     setOpenNewColumnForm(!openNewColumnForm)
@@ -46,6 +50,11 @@ function ListColumns({
   const addNewColumn = async () => {
     if (!newColumnTitle) {
       toast.error('Please enter column title')
+      return
+    }
+
+    if (currentUser.email === TESTING_ACCOUNT_EMAIL) {
+      toast.warning('This is just a testing account! You do not have permisson to create new column!')
       return
     }
 
@@ -166,6 +175,13 @@ function ListColumns({
               autoFocus
               value={newColumnTitle}
               onChange={(e) => setnewColumnTitle(e.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  addNewColumn()
+                } else if (event.key === 'Escape') {
+                  toggleNewColumnForm()
+                }
+              }}
               sx={{
                 // label khi khong focus thi co mau ...,
                 '& label': {
@@ -198,6 +214,7 @@ function ListColumns({
               alignItems: 'center'
             }}>
               <Button
+                className='interceptor-loading'
                 onClick={addNewColumn}
                 variant='contained'
                 color='success'

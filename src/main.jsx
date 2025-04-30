@@ -19,24 +19,45 @@ import { store } from '~/redux/store'
 // Cấu hình react-router-dom với Browser Router
 import { BrowserRouter } from 'react-router-dom'
 
+// Cấu hình Redux-Persist
+import { PersistGate } from 'redux-persist/integration/react'
+import { persistStore } from 'redux-persist'
+const persistor = persistStore(store)
+
+// Kỹ thuật Inject store: là kỹ thuật khi cần sử dụng biên redux store ở các file ngoài phạm vi component
+import { injectStore } from './utils/authorizeAxios'
+injectStore(store)
+
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <BrowserRouter basename='/'>
+  <BrowserRouter
+    basename='/'
+    future={{
+      v7_startTransition: true,
+      v7_relativeSplatPath: true
+    }}
+  >
     <Provider store={store}>
-      <CssVarsProvider theme={theme}>
-        <ConfirmProvider defaultOptions={{
-          allowClose: false,
-          dialogProps: { maxWidth: 'xs' },
-          cancellationButtonProps: { color: 'inherit' },
-          confirmationButtonProps: { color: 'secondary', variant: 'outlined' }
-        }}
-        >
-          {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
-          <CssBaseline />
-          <App />
-          {/* Cấu hình React Toastify */}
-          <ToastContainer position='bottom-left' theme='colored' />
-        </ConfirmProvider>
-      </CssVarsProvider>
+      <PersistGate persistor={persistor}>
+        <CssVarsProvider theme={theme}>
+          <ConfirmProvider
+            defaultOptions={{
+              allowClose: false,
+              dialogProps: { maxWidth: 'xs' },
+              cancellationButtonProps: { color: 'inherit' },
+              confirmationButtonProps: {
+                color: 'secondary',
+                variant: 'outlined'
+              }
+            }}
+          >
+            {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
+            <CssBaseline />
+            <App />
+            {/* Cấu hình React Toastify */}
+            <ToastContainer position='bottom-left' theme='colored' />
+          </ConfirmProvider>
+        </CssVarsProvider>
+      </PersistGate>
     </Provider>
   </BrowserRouter>
 )
