@@ -135,12 +135,12 @@ function LoginForm() {
               Login
             </Button>
           </CardActions>
-          <Box sx={{ padding: '0 1em 1em 1em', textAlign: 'center' }}>
+          {process.env.BUILD_MODE === 'dev' && <Box sx={{ padding: '0 1em 1em 1em', textAlign: 'center' }}>
             <Typography>New to Trello?</Typography>
-            {process.env.BUILD_MODE === 'dev' && <Link to="/register" style={{ textDecoration: 'none' }}>
+            <Link to="/register" style={{ textDecoration: 'none' }}>
               <Typography sx={{ color: 'primary.main', '&:hover': { color: '#ffbb39' } }}>Create account!</Typography>
-            </Link>}
-          </Box>
+            </Link>
+          </Box>}
         </MuiCard>
       </Zoom>
     </form>
