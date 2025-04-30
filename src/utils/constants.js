@@ -7,3 +7,4 @@ if (process.env.BUILD_MODE === 'production') {
 }
 
 export const API_ROOT = apiRoot
+export const TESTING_ACCOUNT_EMAIL = 'testing@gmail.com'

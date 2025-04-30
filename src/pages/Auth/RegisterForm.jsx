@@ -1,5 +1,4 @@
-// TrungQuanDev: https://youtube.com/@trungquandev
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Avatar from '@mui/material/Avatar'
@@ -22,11 +21,21 @@ import {
 
 import FieldErrorAlert from '~/components/Form/FieldErrorAlert'
 
+import { registerUserAPI } from '~/apis'
+import { toast } from 'react-toastify'
+
 function RegisterForm() {
   const { register, handleSubmit, formState: { errors }, watch } = useForm()
+  const navigate = useNavigate()
   const submitRegister = (data) => {
-    // eslint-disable-next-line no-console
-    console.log('🚀 ~ submitRegister ~ data:', data)
+    // console.log('🚀 ~ submitRegister ~ data:', data)
+    const { email, password } = data
+    toast.promise(
+      registerUserAPI({ email, password }),
+      { pending: 'Registration is in progress...' }
+    ).then(user => {
+      navigate(`/login?registeredEmail=${user.email}`)
+    })
   }
   return (
     <form onSubmit={handleSubmit(submitRegister)}>
@@ -100,6 +109,7 @@ function RegisterForm() {
           </Box>
           <CardActions sx={{ padding: '0 1em 1em 1em' }}>
             <Button
+              className='interceptor-loading'
               type="submit"
               variant="contained"
               color="primary"
