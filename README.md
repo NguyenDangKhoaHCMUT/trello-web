@@ -1,4 +1,4 @@
-# Trello Clone - MERN Stack Project
+# [Trello - MERN Stack Project](https://trello-web-omega-weld.vercel.app)
 
 ## Introduction
 A full-stack web application clone of Trello built using the MERN (MongoDB, Express.js, React.js, Node.js) stack. This project is part of the Full Stack MERN Pro Course, focusing on building a real-world application with modern web technologies.
@@ -37,8 +37,9 @@ A full-stack web application clone of Trello built using the MERN (MongoDB, Expr
 - Vite v4.3.2
 - Material UI
 
-### Development Tools
-- ESLint v8.38.0
+## Test Accounts
+- **Email:** testing@gmail.com
+- **Password:** 12345678a
 
 ## Special Thanks
 Special thanks to **Trungquandev** for his excellent tutorials and guidance throughout this learning journey. His clear explanations and practical examples have been invaluable in understanding the MERN stack development process.
