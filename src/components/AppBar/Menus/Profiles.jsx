@@ -11,6 +11,7 @@ import Logout from '@mui/icons-material/Logout'
 import Avatar from '@mui/material/Avatar'
 import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
+import { Link } from 'react-router-dom'
 
 import { useSelector, useDispatch } from 'react-redux'
 import { selectCurrentUser, logoutUserAPI } from '~/redux/user/userSlice'
@@ -54,7 +55,7 @@ function Profiles() {
           <Avatar
             sx={{ width: 36, height: 36 }}
             alt='Profile'
-            src={currentUser?.Avatar}
+            src={currentUser?.avatar}
           />
         </IconButton>
       </Tooltip>
@@ -68,13 +69,15 @@ function Profiles() {
           'aria-labelledby': 'basic-button-profiles"'
         }}
       >
-        <MenuItem sx={{
-          '&:hover': {
-            color: 'success.light'
-          }
-        }}>
-          <Avatar sx={{ width: 28, height: 28, mr: 2 }} src={currentUser?.Avatar}/> Profile
-        </MenuItem>
+        <Link to='/settings/account'>
+          <MenuItem sx={{
+            '&:hover': {
+              color: 'success.light'
+            }
+          }}>
+            <Avatar sx={{ width: 28, height: 28, mr: 2 }} src={currentUser?.avatar}/> Profile
+          </MenuItem>
+        </Link>
         <Divider />
         <MenuItem >
           <ListItemIcon>
