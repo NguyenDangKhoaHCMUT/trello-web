@@ -17,6 +17,8 @@ import RadioGroup from '@mui/material/RadioGroup'
 import FormControlLabel from '@mui/material/FormControlLabel'
 
 import { styled } from '@mui/material/styles'
+
+import { creatNewBoardAPI } from '~/apis'
 const SidebarItem = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
@@ -44,8 +46,14 @@ const BOARD_TYPES = {
  * Bản chất của cái component SidebarCreateBoardModal này chúng ta sẽ trả về một cái SidebarItem để hiển thị ở màn Board List cho phù hợp giao diện bên đó, đồng thời nó cũng chứa thêm một cái Modal để xử lý riêng form create board nhé.
  * Note: Modal là một low-component mà bọn MUI sử dụng bên trong những thứ như Dialog, Drawer, Menu, Popover. Ở đây dĩ nhiên chúng ta có thể sử dụng Dialog cũng không thành vấn đề gì, nhưng sẽ sử dụng Modal để dễ linh hoạt tùy biến giao diện từ con số 0 cho phù hợp với mọi nhu cầu nhé.
  */
-function SidebarCreateBoardModal() {
-  const { control, register, handleSubmit, reset, formState: { errors } } = useForm()
+function SidebarCreateBoardModal({ afterCreatNewBoard }) {
+  const { control, register, handleSubmit, reset, formState: { errors } } = useForm({
+    defaultValues: {
+      title: '',
+      description: '',
+      type: BOARD_TYPES.PUBLIC
+    }
+  })
 
   const [isOpen, setIsOpen] = useState(false)
   const handleOpenModal = () => setIsOpen(true)
@@ -57,10 +65,10 @@ function SidebarCreateBoardModal() {
 
 
   const submitCreateNewBoard = (data) => {
-    const { title, description, type } = data
-    console.log('Board title: ', title)
-    console.log('Board description: ', description)
-    console.log('Board type: ', type)
+    creatNewBoardAPI(data).then(() => {
+      handleCloseModal()
+      afterCreatNewBoard()
+    })
   }
 
   // <>...</> nhắc lại cho bạn anof chưa biết hoặc quên nhé: nó là React Fragment, dùng để bọc các phần tử lại mà không cần chỉ định DOM Node cụ thể nào cả.
@@ -73,7 +81,7 @@ function SidebarCreateBoardModal() {
 
       <Modal
         open={isOpen}
-        // onClose={handleCloseModal} // chỉ sử dụng onClose trong trường hợp muốn đóng Modal bằng nút ESC hoặc click ra ngoài Modal
+        onClose={handleCloseModal} // chỉ sử dụng onClose trong trường hợp muốn đóng Modal bằng nút ESC hoặc click ra ngoài Modal
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >

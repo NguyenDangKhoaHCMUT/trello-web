@@ -36,12 +36,12 @@ const SidebarItem = styled(Box)(({ theme }) => ({
   borderRadius: '8px',
   '&:hover': {
     backgroundColor:
-      theme.palette.mode === 'dark' ? '#33485D' : theme.palette.grey[300],
+      theme.palette.mode === 'dark' ? '#33485D' : theme.palette.grey[300]
   },
   '&.active': {
     color: theme.palette.mode === 'dark' ? '#90caf9' : '#0c66e4',
-    backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#e9f2ff',
-  },
+    backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#e9f2ff'
+  }
 }))
 
 function Boards() {
@@ -81,6 +81,15 @@ function Boards() {
     fetchBoardsData()
   }, [location.search])
 
+  const afterCreatNewBoard = () => {
+    const fetchBoardsData = async () => {
+      const data = await fetchBoardsAPI(location.search)
+      setBoards(data.boards || [])
+      setTotalBoards(data.totalBoards || 0)
+    }
+    fetchBoardsData()
+  }
+
   // Lúc chưa tồn tại boards > đang chờ gọi api thì hiện loading
   if (!boards) {
     return <Reload />
@@ -108,7 +117,7 @@ function Boards() {
             </Stack>
             <Divider sx={{ my: 1 }} />
             <Stack direction='column' spacing={1}>
-              <SidebarCreateBoardModal />
+              <SidebarCreateBoardModal afterCreatNewBoard={afterCreatNewBoard} />
             </Stack>
           </Grid>
 
@@ -146,7 +155,7 @@ function Boards() {
                           sx={{
                             overflow: 'hidden',
                             whiteSpace: 'nowrap',
-                            textOverflow: 'ellipsis',
+                            textOverflow: 'ellipsis'
                           }}
                         >
                           {b.description}
@@ -160,7 +169,7 @@ function Boards() {
                             alignItems: 'center',
                             justifyContent: 'flex-end',
                             color: 'primary.main',
-                            '&:hover': { color: 'primary.light' },
+                            '&:hover': { color: 'primary.light' }
                           }}
                         >
                           Go to board <ArrowRightIcon fontSize='small' />
@@ -180,7 +189,7 @@ function Boards() {
                   pr: 5,
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'flex-end',
+                  justifyContent: 'flex-end'
                 }}
               >
                 <Pagination

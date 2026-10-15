@@ -8,7 +8,7 @@ import { toast } from 'react-toastify'
 import Divider from '@mui/material/Divider'
 import ListItemText from '@mui/material/ListItemText'
 import ListItemIcon from '@mui/material/ListItemIcon'
-import Typography from '@mui/material/Typography'
+// import Typography from '@mui/material/Typography'
 // import ContentCut from '@mui/icons-material/ContentCut'
 // import ContentCopy from '@mui/icons-material/ContentCopy'
 // import ContentPaste from '@mui/icons-material/ContentPaste'
@@ -44,8 +44,11 @@ import { TESTING_ACCOUNT_EMAIL } from '~/utils/constants'
 
 import {
   createNewCardAPI,
-  deleteColumnDetailsAPI
+  deleteColumnDetailsAPI,
+  updateColumnDetailsAPI
 } from '~/apis'
+
+import ToggleFocusInput from '~/components/Form/ToggleFocusInput'
 
 function Column({
   column
@@ -65,9 +68,12 @@ function Column({
     transform,
     transition,
     isDragging
-  } = useSortable({ id: column._id, data: {
-    ...column
-  } }) // id = column._id
+  } = useSortable({
+    id: column._id,
+    data: {
+      ...column
+    }
+  }) // id = column._id
   const dndKitColumnStyles = {
     // touchAction: 'none', //Dành cho sensor default dạng PointerSensor
     //Nếu sử dụng CSS.transform thì sẽ bị lỗi stretch
@@ -81,7 +87,7 @@ function Column({
   }
   const [anchorEl, setAnchorEl] = useState(null)
   const open = Boolean(anchorEl)
-  const handleClick = (event) => {
+  const handleClick = event => {
     setAnchorEl(event.currentTarget)
   }
   const handleClose = () => {
@@ -107,7 +113,9 @@ function Column({
     }
 
     if (currentUser.email === TESTING_ACCOUNT_EMAIL) {
-      toast.warning('This is just a testing account! You do not have permisson to create new card!')
+      toast.warning(
+        'This is just a testing account! You do not have permisson to create new card!'
+      )
       return
     }
     // console.log('newCardTitle: ', newCardTitle)
@@ -135,7 +143,9 @@ function Column({
 
     // Tương tự như hàm createNewColumn, chỗ này dùng CloneDeep để deep copy toàn bộ Board
     const newBoard = cloneDeep(board)
-    const columnToUpdate = newBoard.columns.find(c => c._id === newCardData.columnId) // Tìm Column cần cập nhật
+    const columnToUpdate = newBoard.columns.find(
+      c => c._id === newCardData.columnId
+    ) // Tìm Column cần cập nhật
     if (columnToUpdate) {
       // Nếu column rỗng: bản chất là đang chứa placeholderCard, cần xóa nó đi trc khi thêm card mới vào
       if (columnToUpdate.cards.some(card => card.FE_PlaceholderCard)) {
@@ -159,7 +169,9 @@ function Column({
   const confirmDeleteColumn = useConfirm()
   const handelDeleteColumn = () => {
     if (currentUser.email === TESTING_ACCOUNT_EMAIL) {
-      toast.warning('This is just a testing account! You do not have permisson to delete column(s)!')
+      toast.warning(
+        'This is just a testing account! You do not have permisson to delete column(s)!'
+      )
       return
     }
     confirmDeleteColumn({
@@ -176,58 +188,83 @@ function Column({
         const newBoard = { ...board }
         // Filter trong JS cũng tạo ra mảng mới như concat
         newBoard.columns = newBoard.columns.filter(c => c._id !== column._id) // Xóa Column trong Board
-        newBoard.columnOrderIds = newBoard.columnOrderIds.filter(id => id !== column._id) // Xóa ColumnId trong Board
+        newBoard.columnOrderIds = newBoard.columnOrderIds.filter(
+          id => id !== column._id
+        ) // Xóa ColumnId trong Board
         // console.log(newBoard)
         // setBoard(newBoard) // Cập nhật lại state board
         dispatch(updateCurrentActiveBoard(newBoard)) // Cập nhật lại dữ liệu board trong redux store
 
         // Gọi API xử lý phía BE
-        deleteColumnDetailsAPI(column._id)
-          .then(res => {
-            // console.log("🚀 ~ deleteColumnDetails ~ res:", res)
-            toast.success(res?.deleteResult)
-          })
+        deleteColumnDetailsAPI(column._id).then(res => {
+          // console.log("🚀 ~ deleteColumnDetails ~ res:", res)
+          toast.success(res?.deleteResult)
+        })
       })
       .catch(() => {
         // console.log('Cancel delete column')
       })
   }
+
+  const onUpdateColumnTitle = async newTitle => {
+    // console.log('newTitle: ', newTitle) //da chay toi day roi
+    // Gọi API xử lý phía BE
+    try {
+      await updateColumnDetailsAPI(column._id, {
+        title: newTitle
+      })
+      const newBoard = cloneDeep(board) // Dùng hàm cloneDeep của lodash để deep copy toàn bộ Board
+      const columnToUpdate = newBoard.columns.find(c => c._id === column._id) // Tìm Column cần cập nhật
+      if (columnToUpdate) {
+        columnToUpdate.title = newTitle
+      }
+      dispatch(updateCurrentActiveBoard(newBoard)) // Cập nhật lại dữ liệu board trong redux store
+
+      toast.success('Column title updated successfully')
+    } catch (error) {
+      toast.error(error.message)
+    }
+  }
   return (
-    <div
-      ref={setNodeRef}
-      style={dndKitColumnStyles}
-      {...attributes}
-    >
+    <div ref={setNodeRef} style={dndKitColumnStyles} {...attributes}>
       <Box
         sx={{
           minWidth: 300,
           maxWidth: 300,
-          bgcolor: (theme) => (theme.palette.mode === 'dark' ? '#333643' : '#ebecf0'),
+          bgcolor: theme =>
+            theme.palette.mode === 'dark' ? '#333643' : '#ebecf0',
           ml: 2,
           borderRadius: '6px',
           height: 'fit-content',
-          maxHeight: (theme) => `calc(${theme.trello.boardContentHeight} - ${theme.spacing(5)})`
+          maxHeight: theme =>
+            `calc(${theme.trello.boardContentHeight} - ${theme.spacing(5)})`
         }}
         {...listeners}
       >
         {/* Header column */}
-        <Box sx={{
-          height: theme.trello.columnHeaderHeight,
-          p: 2,
-          display: 'flex',
-          alignItems: 'center', // canh giua theo chieu doc
-          justifyContent: 'space-between' // theo chieu ngang
-        }}>
-          <Typography variant='h6'
+        <Box
+          sx={{
+            height: theme.trello.columnHeaderHeight,
+            p: 2,
+            display: 'flex',
+            alignItems: 'center', // canh giua theo chieu doc
+            justifyContent: 'space-between' // theo chieu ngang
+          }}
+        >
+          {/* <Typography variant='h6'
             sx={{
               fontWeight: 'bold',
               fontSize: '1rem',
               cursor: 'pointer'
             }}
           >
-            {/* Nhấp vào thẻ column title sẽ đổi tên thẻ */}
-            {column.title}
-          </Typography>
+            {column?.title}
+          </Typography> */}
+          <ToggleFocusInput
+            value={column?.title}
+            onChangedValue={onUpdateColumnTitle}
+            data-no-dnd="true"
+          />
           <Box>
             <Tooltip title="More options">
               <ExpandMoreIcon
@@ -252,18 +289,19 @@ function Column({
                 'aria-labelledby': 'basic-button-dropdown"'
               }}
             >
-              <MenuItem sx={{
-                '&:hover': {
-                  color: 'success.light',
-                  '& .add-card-icon': {
-                    color: 'success.light'
+              <MenuItem
+                sx={{
+                  '&:hover': {
+                    color: 'success.light',
+                    '& .add-card-icon': {
+                      color: 'success.light'
+                    }
                   }
-                }
-              }}
-              onClick={toggleNewCardForm} // Mở trạng thái thêm Card mới
+                }}
+                onClick={toggleNewCardForm} // Mở trạng thái thêm Card mới
               >
                 <ListItemIcon>
-                  <AddCardIcon fontSize="small" className='add-card-icon'/>
+                  <AddCardIcon fontSize="small" className="add-card-icon" />
                 </ListItemIcon>
                 <ListItemText>Add new card</ListItemText>
               </MenuItem>
@@ -298,7 +336,10 @@ function Column({
                 }}
               >
                 <ListItemIcon>
-                  <DeleteForeverIcon className='delete-forever-icon' fontSize="small" />
+                  <DeleteForeverIcon
+                    className="delete-forever-icon"
+                    fontSize="small"
+                  />
                 </ListItemIcon>
                 <ListItemText>Delete this column</ListItemText>
               </MenuItem>
@@ -314,35 +355,51 @@ function Column({
         {/* Box List Card */}
         <ListCards cards={orderedCards} />
         {/* Footer column */}
-        <Box sx={{
-          height: theme.trello.columnFooterHeight,
-          p: 2
-        }}>
-          {!openNewCardForm
-            ? <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Button startIcon={<AddCardIcon/>} onClick={toggleNewCardForm}>Add new card</Button>
+        <Box
+          sx={{
+            height: theme.trello.columnFooterHeight,
+            p: 2
+          }}
+        >
+          {!openNewCardForm ? (
+            <Box
+              sx={{
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}
+            >
+              <Button startIcon={<AddCardIcon />} onClick={toggleNewCardForm}>
+                Add new card
+              </Button>
               <Tooltip title="Drag to move">
-                <DragHandleIcon sx={{
-                  cursor: 'pointer'
-                }} />
+                <DragHandleIcon
+                  sx={{
+                    cursor: 'pointer'
+                  }}
+                />
               </Tooltip>
             </Box>
-            : <Box sx={{
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1
-            }}>
+          ) : (
+            <Box
+              sx={{
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}
+            >
               <TextField
                 label="Enter card title..."
                 type="text"
-                size='small'
-                variant='outlined'
+                size="small"
+                variant="outlined"
                 autoFocus
-                data-no-dnd='true'
+                data-no-dnd="true"
                 value={newCardTitle}
-                onChange={(e) => setnewCardTitle(e.target.value)}
-                onKeyDown={(event) => {
+                onChange={e => setnewCardTitle(e.target.value)}
+                onKeyDown={event => {
                   if (event.key === 'Enter') {
                     addNewCard()
                   } else if (event.key === 'Escape') {
@@ -356,22 +413,26 @@ function Column({
                   },
                   // khi input thi mau chu ...
                   '& input': {
-                    color: (theme) => theme.palette.primary.main,
-                    bgcolor: (theme) => (theme.palette.mode === 'dark' ? '#333643' : 'white')
+                    color: theme => theme.palette.primary.main,
+                    bgcolor: theme =>
+                      theme.palette.mode === 'dark' ? '#333643' : 'white'
                   },
                   // label khi focus thi co mau ...,
                   '& label.Mui-focused': {
-                    color: (theme) => theme.palette.primary.main
+                    color: theme => theme.palette.primary.main
                   },
                   '& .MuiOutlinedInput-root': {
-                    '& fieldset': { //khi focus thi border co mau ...,
-                      borderColor: (theme) => theme.palette.primary.main
+                    '& fieldset': {
+                      //khi focus thi border co mau ...,
+                      borderColor: theme => theme.palette.primary.main
                     },
-                    '&: hover fieldset': { //khi focus thi border co mau ...,
-                      borderColor: (theme) => theme.palette.primary.main
+                    '&: hover fieldset': {
+                      //khi focus thi border co mau ...,
+                      borderColor: theme => theme.palette.primary.main
                     },
-                    '&.Mui-focused fieldset': { //khi focus thi border co mau ...,
-                      borderColor: (theme) => theme.palette.primary.main
+                    '&.Mui-focused fieldset': {
+                      //khi focus thi border co mau ...,
+                      borderColor: theme => theme.palette.primary.main
                     }
                   },
                   '& .MuiOutlinedInput-input': {
@@ -379,37 +440,42 @@ function Column({
                   }
                 }}
               />
-              <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1
-              }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1
+                }}
+              >
                 <Button
-                  className='interceptor-loading'
-                  data-no-dnd='true'
+                  className="interceptor-loading"
+                  data-no-dnd="true"
                   onClick={addNewCard}
-                  variant='contained'
-                  color='success'
-                  size='small'
+                  variant="contained"
+                  color="success"
+                  size="small"
                   sx={{
                     boxShadow: 'none',
                     border: '0.5px solid',
-                    borderColor: (theme) => theme.palette.success.main,
+                    borderColor: theme => theme.palette.success.main,
                     '&:hover': {
-                      bgcolor: (theme) => theme.palette.success.main
+                      bgcolor: theme => theme.palette.success.main
                     }
-                  }}>Add</Button>
+                  }}
+                >
+                  Add
+                </Button>
                 <CloseIcon
-                  fontSize='small'
+                  fontSize="small"
                   sx={{
-                    color: (theme) => theme.palette.warning.light,
+                    color: theme => theme.palette.warning.light,
                     cursor: 'pointer'
                   }}
                   onClick={toggleNewCardForm} // Đóng trạng thái thêm Card mới và clear input
                 />
               </Box>
             </Box>
-          }
+          )}
         </Box>
       </Box>
     </div>
