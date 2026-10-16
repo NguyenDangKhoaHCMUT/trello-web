@@ -13,7 +13,11 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 // import theme from '~/theme'
 
+import { useDispatch } from 'react-redux'
+import { updateCurrentActiveCard } from '~/redux/activeCard/activeCardSlice'
+
 function Card({ card }) {
+  const dispatch = useDispatch()
   const {
     attributes,
     listeners,
@@ -21,23 +25,33 @@ function Card({ card }) {
     transform,
     transition,
     isDragging
-  } = useSortable({ id: card._id, data: {
-    ...card
-  } }) // id = column._id
+  } = useSortable({
+    id: card._id,
+    data: {
+      ...card
+    }
+  }) // id = column._id
   const dndKitCardStyles = {
     // touchAction: 'none', //Dành cho sensor default dạng PointerSensor
     //Nếu sử dụng CSS.transform thì sẽ bị lỗi stretch
     transform: CSS.Translate.toString(transform), // chuyen thanh translate
     transition,
     opacity: isDragging ? 0.5 : undefined, // Nếu đang kéo thì cho nó mờ đi 50%
-    border: isDragging? '1px solid #2ecc71' : undefined // Nếu đang kéo thì cho nó có border
+    border: isDragging ? '1px solid #2ecc71' : undefined // Nếu đang kéo thì cho nó có border
   }
+  // Hàm xử lý khi click mở Modal Active Card
+  const handleCardClick = () => {
+    // Call API
+    dispatch(updateCurrentActiveCard(card))
+  }
+
   return (
     <MuiCard
       ref={setNodeRef}
       style={dndKitCardStyles}
       {...attributes}
       {...listeners}
+      onClick={handleCardClick}
       sx={{
         cursor: 'pointer',
         boxShadow: '0 1px 1px rgba(0,0,0,0.2)',
@@ -45,41 +59,35 @@ function Card({ card }) {
         display: card?.FE_PlaceholderCard ? 'none' : 'block',
         border: '1px solid transparent',
         '&:hover': {
-          borderColor: (theme) => theme.palette.primary.main
+          borderColor: theme => theme.palette.primary.main
         }
-
-      }}>
-      {card?.cover &&
-        <CardMedia
-          sx={{ height: 140 }}
-          image={card?.cover}
-        />
-      }
-      <CardContent sx={{ p: 1.5, '&:last-child': { p : 1.5 } }}>
+      }}
+    >
+      {card?.cover && <CardMedia sx={{ height: 140 }} image={card?.cover} />}
+      <CardContent sx={{ p: 1.5, '&:last-child': { p: 1.5 } }}>
         <Typography>{card.title}</Typography>
       </CardContent>
-      {
-        (card?.memberIds?.length > 0 ||
+      {(card?.memberIds?.length > 0 ||
         card?.comments?.length > 0 ||
-        card?.attachments?.length > 0) &&
+        card?.attachments?.length > 0) && (
         <CardActions sx={{ p: '0 4px 8px 4px' }}>
-          {card?.memberIds?.length > 0 &&
-            <Button size="small" startIcon={<GroupIcon/>}>
+          {card?.memberIds?.length > 0 && (
+            <Button size="small" startIcon={<GroupIcon />}>
               {card?.memberIds?.length}
             </Button>
-          }
-          {card?.comments?.length > 0 &&
-            <Button size="small" startIcon={<ModeCommentIcon/>}>
+          )}
+          {card?.comments?.length > 0 && (
+            <Button size="small" startIcon={<ModeCommentIcon />}>
               {card?.comments?.length}
             </Button>
-          }
-          {card?.attachments?.length > 0 &&
-            <Button size="small" startIcon={<AttachFileIcon/>}>
+          )}
+          {card?.attachments?.length > 0 && (
+            <Button size="small" startIcon={<AttachFileIcon />}>
               {card?.attachments?.length}
             </Button>
-          }
+          )}
         </CardActions>
-      }
+      )}
     </MuiCard>
   )
 }

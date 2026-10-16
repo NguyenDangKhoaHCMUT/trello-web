@@ -89,3 +89,8 @@ export const creatNewBoardAPI = async (newBoardData) => {
   // Lưu ý: axios sẽ trả về kết quả qua property của nó là data
   return response.data
 }
+
+export const updateCardDetailsAPI = async (cardId, updateData) => {
+  const response = await authorizeAxiosInstance.put(`${API_ROOT}/v1/cards/${cardId}`, updateData)
+  return response.data
+}
